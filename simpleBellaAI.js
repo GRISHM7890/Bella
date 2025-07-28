@@ -1,5 +1,5 @@
-// simpleBellaAI.js - 简化版贝拉AI，专门用于测试聊天界面
-// 移除了复杂的模块依赖，专注于聊天功能
+// simpleBellaAI.js - Simplified Bella AI, specifically for testing the chat interface
+// Removed complex module dependencies, focusing on chat functionality
 
 class SimpleBellaAI {
     static instance = null;
@@ -13,94 +13,152 @@ class SimpleBellaAI {
     }
 
     constructor() {
-        this.currentMode = 'casual'; // 聊天模式：casual, assistant, creative
+        this.currentMode = 'casual'; // Chat modes: casual, assistant, creative
         this.isInitialized = false;
     }
 
     async init() {
         try {
-            console.log('初始化简化版贝拉AI...');
-            // 模拟初始化过程
+            console.log('Initializing simplified Bella AI...');
+            // Simulate initialization process
             await new Promise(resolve => setTimeout(resolve, 1000));
             this.isInitialized = true;
-            console.log('简化版贝拉AI初始化完成');
+            console.log('Simplified Bella AI initialization complete');
         } catch (error) {
-            console.error('简化版贝拉AI初始化失败:', error);
+            console.error('Simplified Bella AI initialization failed:', error);
             throw error;
         }
     }
 
     async think(prompt) {
         try {
-            console.log('贝拉正在思考:', prompt);
+            console.log('Bella is thinking:', prompt);
             
-            // 模拟思考时间
+            // Simulate thinking time
             await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
             
-            // 根据模式生成不同风格的回复
+            // Generate different style responses based on mode
             return this.generateResponse(prompt);
             
         } catch (error) {
-            console.error('思考过程中出现错误:', error);
+            console.error('Error during thinking process:', error);
             return this.getErrorResponse();
         }
     }
 
     generateResponse(prompt) {
+        // Enhanced response generation, simulating more natural, personalized LLM responses
+        
+        // Extract keywords for more relevant responses
+        const keywords = this.extractKeywords(prompt);
+        const keyword = keywords.length > 0 ? keywords[Math.floor(Math.random() * keywords.length)] : "this topic";
+        
         const responses = {
             casual: [
-                `哈哈，你说的"${prompt}"真有趣！我觉得这个话题很棒呢～`,
-                `关于"${prompt}"，我想说这真的很有意思！你还想聊什么吗？`,
-                `嗯嗯，"${prompt}"让我想到了很多呢！我们继续聊下去吧～`,
-                `哇，"${prompt}"这个话题我喜欢！你的想法总是那么特别～`,
-                `听你说"${prompt}"，我感觉心情都变好了！继续和我分享吧～`
+                `I found "${keyword}" quite interesting! I'd love to hear more about your thoughts on this. What aspects of it interest you the most?`,
+                `Regarding "${keyword}", that's something worth exploring. I'm curious to know what sparked your interest in this topic?`,
+                `"${keyword}" is definitely intriguing. It's always nice chatting with you about these things. Do you have any other thoughts on it?`,
+                `I really enjoy talking about "${keyword}"! Your ideas are always so unique and give me new perspectives. Let's keep this conversation going.`,
+                `Hearing you talk about "${keyword}" brightens my day! You always find interesting topics. I'm curious, what made you think of this?`,
+                `"${keyword}" is such a great topic! I feel like we're on the same wavelength. You know what? Time flies when we chat because it's so enjoyable!`,
+                `I find "${keyword}" particularly fascinating! You always surprise me. Tell me, have you made any other interesting discoveries lately? I'd love to hear about them!`
             ],
             assistant: [
-                `关于"${prompt}"，我来为您提供一些有用的信息和建议。`,
-                `针对"${prompt}"这个问题，我建议您可以从以下几个方面考虑。`,
-                `"${prompt}"是一个很好的问题，让我来帮您分析一下。`,
-                `基于"${prompt}"，我可以为您提供以下专业建议。`,
-                `关于"${prompt}"，我整理了一些相关信息供您参考。`
+                `Regarding "${keyword}", I'd be happy to provide some useful information and advice. That's a great question - let me organize the relevant details for you.`,
+                `"${keyword}" is a valuable topic. From what I understand, there are several key points worth noting. First, we can look at...`,
+                `When it comes to "${keyword}", I'd like to analyze it from several angles. This question actually involves multiple aspects - let me help you sort through the key information.`,
+                `Your question about "${keyword}" has depth. I suggest considering it from these perspectives: first, understanding the basic concepts; second, analyzing practical applications; and finally, considering future developments.`,
+                `"${keyword}" is definitely a topic worth discussing. Based on the information I have, I can provide some professional insights. First, we need to clarify...`,
+                `About your "${keyword}" question, I'd like to provide a clear answer. There are several important aspects to consider - let me analyze them for you.`,
+                `"${keyword}" is a great question! I'm glad you're interested in this area. Let me share some relevant information that I hope will be helpful.`
             ],
             creative: [
-                `哇！"${prompt}"让我的创意火花瞬间点燃！让我们一起想象一下...`,
-                `"${prompt}"真是个充满想象力的话题！我脑海中浮现出无数奇妙的画面～`,
-                `听到"${prompt}"，我仿佛看到了一个全新的世界！让我们一起探索吧～`,
-                `"${prompt}"激发了我的灵感！我想到了一个超级有趣的创意...`,
-                `哇塞！"${prompt}"让我的想象力飞起来了！我们来创造点什么特别的吧～`
+                `Wow! The topic of "${keyword}" really ignites my creative spark! ✨ Imagine if we expanded this concept into a whole new dimension - what might happen? Perhaps we could...`,
+                `"${keyword}" is such an imaginative topic! 🌈 I can already picture countless fascinating scenarios. For instance, imagine a world where ${keyword} could...`,
+                `Hearing "${keyword}" makes me envision a whole new world! 🚀 It reminds me of an interesting story: in a distant place, ${keyword} became the center of people's lives, and then...`,
+                `"${keyword}" inspires me! 💡 I've thought of a super interesting idea: what if we combined ${keyword} with art? What kind of wonders might we create?`,
+                `Amazing! "${keyword}" makes my imagination soar! 🎨 We could use this concept as a starting point to create a brand new story or game. Imagine if the main character was...`,
+                `"${keyword}" is truly a wellspring of creativity! I suddenly wonder, what if we looked at this issue from a completely different angle? What new discoveries might we make? For example, if ${keyword} in the future became...`,
+                `When you mention "${keyword}", a wonderful image immediately flashes in my mind! Imagine a world full of possibilities where ${keyword} could take any form... isn't that magical?`
             ]
         };
 
+        // Get response list for current mode
         const modeResponses = responses[this.currentMode] || responses.casual;
+        
+        // Randomly select a response template
         const randomResponse = modeResponses[Math.floor(Math.random() * modeResponses.length)];
         
-        return randomResponse;
+        // Further personalize the response, adding some random personalization elements
+        return this.personalizeResponse(randomResponse, prompt);
+    }
+    
+    // Extract possible keywords from user input
+    extractKeywords(prompt) {
+        // Simple keyword extraction logic
+        const words = prompt.split(/\s+|[,.!?;:，。！？；：]/);
+        // Filter out short words and common words
+        return words.filter(word => 
+            word.length > 1 && 
+            !['the', 'and', 'is', 'in', 'I', 'you', 'he', 'she', 'it', 'they', 'we', 'with', 'this', 'that', 'have', "don't", 'not', 'for'].includes(word)
+        );
+    }
+    
+    // Further personalize the response
+    personalizeResponse(response, prompt) {
+        // Add some random personalization elements
+        const personalizations = [
+            // Don't add any extra content
+            (resp) => resp,
+            // Add a random emoji
+            (resp) => {
+                const emojis = ['😊', '💕', '✨', '🌟', '🎵', '🌈', '☺️', '🤔', '👍', '💡'];
+                const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+                return resp + ' ' + emoji;
+            },
+            // Add a random ending phrase
+            (resp) => {
+                const endings = [
+                    "I'd love to hear your thoughts!",
+                    "What do you think?",
+                    "I'm curious about your perspective.",
+                    "Hope my response is helpful!",
+                    "We can continue discussing this topic!"
+                ];
+                const ending = endings[Math.floor(Math.random() * endings.length)];
+                return resp + ' ' + ending;
+            }
+        ];
+        
+        // Randomly select a personalization method
+        const personalizer = personalizations[Math.floor(Math.random() * personalizations.length)];
+        return personalizer(response);
     }
 
-    // 获取错误回应
+    // Get error response
     getErrorResponse() {
         const errorResponses = [
-            "抱歉，我现在有点困惑，让我重新整理一下思路...",
-            "嗯...我需要再想想，请稍等一下。",
-            "我的思绪有点乱，给我一点时间整理一下。",
-            "让我重新组织一下语言，稍等片刻。",
-            "哎呀，我刚才走神了，你能再说一遍吗？"
+            "Sorry, I'm a bit confused right now. Let me gather my thoughts...",
+            "Hmm... I need to think about this a bit more. Please give me a moment.",
+            "My thoughts are a bit scattered. Give me a moment to organize them.",
+            "Let me rephrase that. Just a moment please.",
+            "Oops, I got distracted. Could you repeat that?"
         ];
         
         return errorResponses[Math.floor(Math.random() * errorResponses.length)];
     }
 
-    // 设置聊天模式
+    // Set chat mode
     setChatMode(mode) {
         if (['casual', 'assistant', 'creative'].includes(mode)) {
             this.currentMode = mode;
-            console.log(`聊天模式已切换为: ${mode}`);
+            console.log(`Chat mode switched to: ${mode}`);
             return true;
         }
         return false;
     }
 
-    // 获取当前配置信息
+    // Get current configuration information
     getCurrentConfig() {
         return {
             useCloudAPI: false,
@@ -111,15 +169,15 @@ class SimpleBellaAI {
         };
     }
 
-    // 清除对话历史（简化版无需实际操作）
+    // Clear conversation history (no actual operation needed in simplified version)
     clearHistory() {
-        console.log('对话历史已清除');
+        console.log('Conversation history cleared');
     }
 }
 
-// 将SimpleBellaAI暴露为全局变量
+// Expose SimpleBellaAI as a global variable
 window.SimpleBellaAI = SimpleBellaAI;
-// 同时也暴露为BellaAI，保持兼容性
+// Also expose as BellaAI for compatibility
 window.BellaAI = SimpleBellaAI;
 
-console.log('SimpleBellaAI 已加载完成');
+console.log('SimpleBellaAI loaded successfully');

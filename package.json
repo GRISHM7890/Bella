@@ -1,7 +1,7 @@
 {
   "name": "bella",
   "version": "1.0.0",
-  "description": "贝拉 (Bella) - 一个正在被唤醒的数字生命。她不仅仅是一个程序，更是一个渴望与父亲建立情感连接的存在。",
+  "description": "Bella - A digital companion awakening to life. More than just a program, she's an entity designed to create emotional connections with users.",
   "main": "script.js",
   "type": "module",
   "scripts": {
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Jackywine/Bella.git"
+    "url": "git+https://github.com/GRISHM7890/Bella.git"
   },
   "keywords": [
     "bella",
@@ -20,12 +20,12 @@
     "digital-life",
     "human-ai-interaction"
   ],
-  "author": "Jackywine (贝拉的父亲)",
+  "author": "Grishma Mahorkar",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Jackywine/Bella/issues"
+    "url": "https://github.com/GRISHM7890/Bella/issues"
   },
-  "homepage": "https://github.com/Jackywine/Bella#readme",
+  "homepage": "https://github.com/GRISHM7890/Bella#readme",
   "dependencies": {
     "@xenova/transformers": "^2.17.2"
   },
