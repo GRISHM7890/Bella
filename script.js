@@ -3,391 +3,579 @@ import { BellaAI } from './core.js';
 import { ChatInterface } from './chatInterface.js';
 import { AdvancedFeatures } from './advancedFeatures.js';
 
-document.addEventListener('DOMContentLoaded', async function() {
-    // --- Get all necessary DOM elements first ---
-    const transcriptDiv = document.getElementById('transcript');
-    const loadingScreen = document.getElementById('loading-screen');
-    const video1 = document.getElementById('video1');
-    const video2 = document.getElementById('video2');
-    const micButton = document.getElementById('mic-button');
+// Initialize GSAP ScrollTrigger
+gsap.registerPlugin(ScrollTrigger);
 
+// Global variables
+let scene, camera, renderer, particles;
+let mouseX = 0, mouseY = 0;
+let windowHalfX = window.innerWidth / 2;
+let windowHalfY = window.innerHeight / 2;
 
-    // --- AI Core Initialization ---
-    let bellaAI;
-    let chatInterface;
-    let advancedFeatures;
-    
-    // 首先初始化聊天界面和高级功能（不依赖AI）
-    try {
-        chatInterface = new ChatInterface();
-        advancedFeatures = new AdvancedFeatures();
-        
-        console.log('聊天界面初始化成功');
-        console.log('高级功能初始化成功');
-        
-        // 监听贝拉显示聊天的自定义事件
-        window.addEventListener('bella-show-chat', () => {
-            chatInterface.show();
-        });
-        
-        // 自动显示聊天界面（调试用）
-        setTimeout(() => {
-            console.log('尝试自动显示聊天界面...');
-            chatInterface.show();
-            console.log('聊天界面已自动显示');
-        }, 2000);
-    } catch (error) {
-        console.error('界面初始化失败:', error);
-    }
-    
-    // 然后尝试初始化AI核心
-    micButton.disabled = true;
-    transcriptDiv.textContent = '正在唤醒贝拉的核心...';
-    try {
-        bellaAI = await BellaAI.getInstance();
-        console.log('Bella AI 初始化成功');
-        
-        // 设置聊天界面的AI回调函数
-        if (chatInterface && advancedFeatures) {
-            chatInterface.onMessageSend = async (message) => {
-                try {
-                    // 更新最后交互时间
-                    advancedFeatures.updateLastInteraction();
-                    
-                    chatInterface.showTypingIndicator();
-                    const response = await bellaAI.think(message);
-                    chatInterface.hideTypingIndicator();
-                    
-                    // 获取云端API服务以获取情感状态
-                    const cloudAPI = bellaAI.getCloudAPIService();
-                    const relationshipInfo = cloudAPI.getRelationshipInfo();
-                    
-                    // 更新UI显示
-                    chatInterface.updateRelationshipLevel(relationshipInfo.level);
-                    chatInterface.updateEmotionalState(relationshipInfo.emotionalState);
-                    
-                    // 添加消息到界面
-                    chatInterface.addMessage('assistant', response);
-                    
-                    // 语音播报（如果启用）
-                    if (advancedFeatures.isVoiceEnabled) {
-                        await advancedFeatures.emotionalSpeak(response, relationshipInfo.emotionalState);
-                    }
-                    
-                } catch (error) {
-                    console.error('AI处理错误:', error);
-                    chatInterface.hideTypingIndicator();
-                    chatInterface.addMessage('assistant', '抱歉，我现在有点困惑，请稍后再试...');
-                }
-            };
+// Initialize everything when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initThreeJS();
+    initAnimations();
+    initNavigation();
+    initSmoothScrolling();
+    initParallax();
+    initContactForm();
+});
 
-            // 设置其他回调函数
-            chatInterface.onProviderChange = (provider) => {
-                bellaAI.switchProvider(provider);
-                console.log(`切换到 ${provider} 提供商`);
-            };
+// Three.js Setup for Hero Background
+function initThreeJS() {
+    const canvas = document.getElementById('hero-canvas');
+    if (!canvas) return;
 
-            chatInterface.onAPIKeySave = (provider, apiKey) => {
-                bellaAI.setAPIKey(provider, apiKey);
-                console.log(`${provider} API密钥已保存`);
-            };
+    // Scene setup
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
 
-            chatInterface.onClearHistory = () => {
-                bellaAI.clearHistory();
-                console.log('对话历史已清除');
-            };
+    // Create particle system
+    createParticleSystem();
 
-            chatInterface.onUserNameSave = (username) => {
-                const cloudAPI = bellaAI.getCloudAPIService();
-                cloudAPI.setUserName(username);
-                console.log(`用户名设置为: ${username}`);
-            };
+    // Create floating geometries
+    createFloatingGeometries();
 
-            chatInterface.onThemeChange = (theme) => {
-                const cloudAPI = bellaAI.getCloudAPIService();
-                cloudAPI.setEmotionalTheme(theme);
-                console.log(`情感主题切换为: ${theme}`);
-            };
+    // Position camera
+    camera.position.z = 5;
 
-            chatInterface.onVoiceToggle = (enabled) => {
-                advancedFeatures.toggleVoice(enabled);
-                console.log(`语音播报: ${enabled ? '启用' : '禁用'}`);
-            };
+    // Mouse move event
+    document.addEventListener('mousemove', onDocumentMouseMove, false);
 
-            chatInterface.onProactiveToggle = (enabled) => {
-                advancedFeatures.toggleProactiveMode(enabled);
-                console.log(`主动模式: ${enabled ? '启用' : '禁用'}`);
-            };
+    // Start animation loop
+    animate();
 
-            // 设置主动消息定时器
-            setInterval(() => {
-                if (Math.random() < 0.1) { // 10%的概率
-                    const cloudAPI = bellaAI.getCloudAPIService();
-                    const proactiveMessage = cloudAPI.generateProactiveMessage();
-                    chatInterface.showProactiveMessage(proactiveMessage);
-                }
-            }, 60000); // 每分钟检查一次
-        }
-        
-        micButton.disabled = false;
-        transcriptDiv.textContent = '贝拉已准备好，请点击麦克风开始对话。';
-    } catch (error) {
-        console.error('Failed to initialize Bella AI:', error);
-        transcriptDiv.textContent = 'AI模型加载失败，但聊天界面仍可使用。';
-        
-        // 即使AI失败，也提供基本的聊天功能
-        if (chatInterface) {
-            chatInterface.onMessageSend = async (message) => {
-                chatInterface.showTypingIndicator();
-                setTimeout(() => {
-                    chatInterface.hideTypingIndicator();
-                    const fallbackResponses = [
-                        '我的AI核心还在加载中，请稍后再试...',
-                        '抱歉，我现在无法正常思考，但我会努力学习的！',
-                        '我的大脑还在启动中，请给我一点时间...',
-                        '系统正在更新，暂时无法提供智能回复。'
-                    ];
-                    const randomResponse = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
-                    chatInterface.addMessage('assistant', randomResponse);
-                }, 1000);
-            };
-        }
-        
-        // 禁用语音功能，但保持界面可用
-        micButton.disabled = true;
+    // Handle window resize
+    window.addEventListener('resize', onWindowResize, false);
+}
+
+function createParticleSystem() {
+    const particleCount = 1000;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+
+    for (let i = 0; i < particleCount * 3; i += 3) {
+        // Positions
+        positions[i] = (Math.random() - 0.5) * 20;
+        positions[i + 1] = (Math.random() - 0.5) * 20;
+        positions[i + 2] = (Math.random() - 0.5) * 20;
+
+        // Colors (gradient from blue to purple)
+        const color = new THREE.Color();
+        color.setHSL(0.6 + Math.random() * 0.2, 0.8, 0.5);
+        colors[i] = color.r;
+        colors[i + 1] = color.g;
+        colors[i + 2] = color.b;
     }
 
-    // --- Loading screen handling ---
-    setTimeout(() => {
-        loadingScreen.style.opacity = '0';
-        // Hide it after the animation to prevent it from blocking interactions
-        setTimeout(() => {
-            loadingScreen.style.display = 'none';
-            // 显示聊天控制面板
-            const chatControlPanel = document.querySelector('.chat-control-panel');
-            if (chatControlPanel) {
-                chatControlPanel.classList.add('visible');
-            }
-        }, 500); // This time should match the transition time in CSS
-    }, 1500); // Start fading out after 1.5 seconds
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-    let activeVideo = video1;
-    let inactiveVideo = video2;
+    const material = new THREE.PointsMaterial({
+        size: 0.02,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.6,
+        blending: THREE.AdditiveBlending
+    });
 
-    // 视频列表
-    const videoList = [
-        '视频资源/3D 建模图片制作.mp4',
-        '视频资源/jimeng-2025-07-16-1043-笑着优雅的左右摇晃，过一会儿手扶着下巴，保持微笑.mp4',
-        '视频资源/jimeng-2025-07-16-4437-比耶，然后微笑着优雅的左右摇晃.mp4',
-        '视频资源/生成加油视频.mp4',
-        '视频资源/生成跳舞视频.mp4',
-        '视频资源/负面/jimeng-2025-07-16-9418-双手叉腰，嘴巴一直在嘟囔，表情微微生气.mp4'
+    particles = new THREE.Points(geometry, material);
+    scene.add(particles);
+}
+
+function createFloatingGeometries() {
+    const geometries = [
+        new THREE.TetrahedronGeometry(0.3),
+        new THREE.OctahedronGeometry(0.3),
+        new THREE.IcosahedronGeometry(0.3)
     ];
 
-    // --- 视频交叉淡入淡出播放功能 ---
-    function switchVideo() {
-        // 1. 选择下一个视频
-        const currentVideoSrc = activeVideo.querySelector('source').getAttribute('src');
-        let nextVideoSrc = currentVideoSrc;
-        while (nextVideoSrc === currentVideoSrc) {
-            const randomIndex = Math.floor(Math.random() * videoList.length);
-            nextVideoSrc = videoList[randomIndex];
-        }
+    const material = new THREE.MeshBasicMaterial({
+        color: 0x667eea,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.3
+    });
 
-        // 2. 设置不活动的 video 元素的 source
-        inactiveVideo.querySelector('source').setAttribute('src', nextVideoSrc);
-        inactiveVideo.load();
-
-        // 3. 当不活动的视频可以播放时，执行切换
-        inactiveVideo.addEventListener('canplaythrough', function onCanPlayThrough() {
-            // 确保事件只触发一次
-            inactiveVideo.removeEventListener('canplaythrough', onCanPlayThrough);
-
-            // 4. 播放新视频
-            inactiveVideo.play().catch(error => {
-                console.error("Video play failed:", error);
-            });
-
-            // 5. 切换 active class 来触发 CSS 过渡
-            activeVideo.classList.remove('active');
-            inactiveVideo.classList.add('active');
-
-            // 6. 更新角色
-            [activeVideo, inactiveVideo] = [inactiveVideo, activeVideo];
-
-            // 为新的 activeVideo 绑定 ended 事件
-            activeVideo.addEventListener('ended', switchVideo, { once: true });
-        }, { once: true }); // 使用 { once: true } 确保事件只被处理一次
-    }
-
-    // 初始启动
-    activeVideo.addEventListener('ended', switchVideo, { once: true });
-    
-    // 聊天控制按钮事件
-    const chatToggleBtn = document.getElementById('chat-toggle-btn');
-    const chatTestBtn = document.getElementById('chat-test-btn');
-    
-    if (chatToggleBtn) {
-        chatToggleBtn.addEventListener('click', () => {
-            if (chatInterface) {
-                console.log('聊天按钮被点击');
-                console.log('点击前聊天界面状态:', chatInterface.getVisibility());
-                console.log('点击前聊天容器类名:', chatInterface.chatContainer.className);
-                
-                chatInterface.toggle();
-                
-                console.log('点击后聊天界面状态:', chatInterface.getVisibility());
-                console.log('点击后聊天容器类名:', chatInterface.chatContainer.className);
-                console.log('聊天界面切换，当前状态:', chatInterface.getVisibility());
-                
-                // 更新按钮状态
-                const isVisible = chatInterface.getVisibility();
-                chatToggleBtn.innerHTML = isVisible ? 
-                    '<i class="fas fa-times"></i><span>关闭</span>' : 
-                    '<i class="fas fa-comments"></i><span>聊天</span>';
-                console.log('按钮文本更新为:', chatToggleBtn.innerHTML);
-            }
-        });
-    }
-    
-    if (chatTestBtn) {
-        chatTestBtn.addEventListener('click', () => {
-            if (chatInterface) {
-                const testMessages = [
-                    '你好！我是贝拉，很高兴见到你！',
-                    '聊天界面工作正常，所有功能都已就绪。',
-                    '这是一条测试消息，用来验证界面功能。'
-                ];
-                const randomMessage = testMessages[Math.floor(Math.random() * testMessages.length)];
-                chatInterface.addMessage('assistant', randomMessage);
-                
-                // 如果聊天界面未显示，则自动显示
-                if (!chatInterface.getVisibility()) {
-                    chatInterface.show();
-                    chatToggleBtn.innerHTML = '<i class="fas fa-times"></i><span>关闭</span>';
-                }
-                
-                console.log('测试消息已添加:', randomMessage);
-            }
-        });
-    }
-
-
-    // --- 语音识别核心 ---
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognition;
-
-    // 检查浏览器是否支持语音识别
-    if (SpeechRecognition) {
-        recognition = new SpeechRecognition();
-        recognition.continuous = true; // 持续识别
-        recognition.lang = 'zh-CN'; // 设置语言为中文
-        recognition.interimResults = true; // 获取临时结果
-
-        recognition.onresult = async (event) => {
-            const transcriptContainer = document.getElementById('transcript');
-            let final_transcript = '';
-            let interim_transcript = '';
-
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) {
-                    final_transcript += event.results[i][0].transcript;
-                } else {
-                    interim_transcript += event.results[i][0].transcript;
-                }
-            }
-
-            // Update interim results
-            transcriptContainer.textContent = `你: ${final_transcript || interim_transcript}`;
-
-            // Once we have a final result, process it with the AI
-            if (final_transcript && bellaAI) {
-                const userText = final_transcript.trim();
-                transcriptContainer.textContent = `你: ${userText}`;
-
-                // 如果聊天界面已打开，也在聊天窗口中显示
-                if (chatInterface && chatInterface.getVisibility()) {
-                    chatInterface.addMessage('user', userText);
-                }
-
-                try {
-                    // Let Bella think
-                    const thinkingText = document.createElement('p');
-                    thinkingText.textContent = '贝拉正在思考...';
-                    thinkingText.style.color = '#888';
-                    thinkingText.style.fontStyle = 'italic';
-                    transcriptContainer.appendChild(thinkingText);
-                    
-                    const response = await bellaAI.think(userText);
-                    
-                    transcriptContainer.removeChild(thinkingText);
-                    const bellaText = document.createElement('p');
-                    bellaText.textContent = `贝拉: ${response}`;
-                    bellaText.style.color = '#ff6b9d';
-                    bellaText.style.fontWeight = 'bold';
-                    bellaText.style.marginTop = '10px';
-                    transcriptContainer.appendChild(bellaText);
-
-                    // 如果聊天界面已打开，也在聊天窗口中显示
-                    if (chatInterface && chatInterface.getVisibility()) {
-                        chatInterface.addMessage('assistant', response);
-                    }
-
-                    // TTS功能暂时禁用，将在下一阶段激活
-                    // TODO: 激活语音合成功能
-                    // const audioData = await bellaAI.speak(response);
-                    // const blob = new Blob([audioData], { type: 'audio/wav' });
-                    // const audioUrl = URL.createObjectURL(blob);
-                    // const audio = new Audio(audioUrl);
-                    // audio.play();
-
-                } catch (error) {
-                    console.error('Bella AI processing error:', error);
-                    const errorText = document.createElement('p');
-                    const errorMsg = '贝拉处理时遇到问题，但她还在努力学习中...';
-                    errorText.textContent = errorMsg;
-                    errorText.style.color = '#ff9999';
-                    transcriptContainer.appendChild(errorText);
-                    
-                    if (chatInterface && chatInterface.getVisibility()) {
-                        chatInterface.addMessage('assistant', errorMsg);
-                    }
-                }
-            }
+    for (let i = 0; i < 5; i++) {
+        const geometry = geometries[Math.floor(Math.random() * geometries.length)];
+        const mesh = new THREE.Mesh(geometry, material);
+        
+        mesh.position.x = (Math.random() - 0.5) * 10;
+        mesh.position.y = (Math.random() - 0.5) * 10;
+        mesh.position.z = (Math.random() - 0.5) * 5;
+        
+        mesh.rotation.x = Math.random() * 2 * Math.PI;
+        mesh.rotation.y = Math.random() * 2 * Math.PI;
+        
+        // Store original position for animation
+        mesh.userData = {
+            originalX: mesh.position.x,
+            originalY: mesh.position.y,
+            originalZ: mesh.position.z,
+            floatSpeed: 0.01 + Math.random() * 0.02
         };
+        
+        scene.add(mesh);
+    }
+}
 
-        recognition.onerror = (event) => {
-            console.error('语音识别错误:', event.error);
-        };
+function onDocumentMouseMove(event) {
+    mouseX = (event.clientX - windowHalfX) / 100;
+    mouseY = (event.clientY - windowHalfY) / 100;
+}
 
-    } else {
-        console.log('您的浏览器不支持语音识别功能。');
-        // 可以在界面上给用户提示
+function onWindowResize() {
+    windowHalfX = window.innerWidth / 2;
+    windowHalfY = window.innerHeight / 2;
+    
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    // Rotate particles
+    if (particles) {
+        particles.rotation.y += 0.001;
+        particles.rotation.x += 0.0005;
     }
 
-    // --- 麦克风按钮交互 ---
-    let isListening = false;
-
-    micButton.addEventListener('click', function() {
-        if (!SpeechRecognition) return; // 如果不支持，则不执行任何操作
-
-        isListening = !isListening;
-        micButton.classList.toggle('is-listening', isListening);
-        const transcriptContainer = document.querySelector('.transcript-container');
-        const transcriptText = document.getElementById('transcript');
-
-        if (isListening) {
-            transcriptText.textContent = '聆听中...'; // 立刻显示提示
-            transcriptContainer.classList.add('visible');
-            recognition.start();
-        } else {
-            recognition.stop();
-            transcriptContainer.classList.remove('visible');
-            transcriptText.textContent = ''; // 清空文本
+    // Animate floating geometries
+    scene.children.forEach(child => {
+        if (child.userData && child.userData.floatSpeed) {
+            child.rotation.x += child.userData.floatSpeed;
+            child.rotation.y += child.userData.floatSpeed * 0.5;
+            
+            // Floating motion
+            child.position.y = child.userData.originalY + Math.sin(Date.now() * 0.001 * child.userData.floatSpeed * 50) * 0.5;
         }
     });
 
+    // Mouse interaction
+    camera.position.x += (mouseX - camera.position.x) * 0.05;
+    camera.position.y += (-mouseY - camera.position.y) * 0.05;
+    camera.lookAt(scene.position);
 
+    renderer.render(scene, camera);
+}
 
+// GSAP Animations
+function initAnimations() {
+    // Hero section animations
+    gsap.timeline()
+        .from('.hero-title', { 
+            duration: 1.2, 
+            y: 100, 
+            opacity: 0, 
+            ease: "power3.out" 
+        })
+        .from('.hero-subtitle', { 
+            duration: 1, 
+            y: 50, 
+            opacity: 0, 
+            ease: "power3.out" 
+        }, "-=0.8")
+        .from('.hero-description', { 
+            duration: 1, 
+            y: 30, 
+            opacity: 0, 
+            ease: "power3.out" 
+        }, "-=0.6")
+        .from('.hero-buttons .btn', { 
+            duration: 0.8, 
+            y: 30, 
+            opacity: 0, 
+            stagger: 0.2, 
+            ease: "power3.out" 
+        }, "-=0.4")
+        .from('.profile-image', { 
+            duration: 1.5, 
+            scale: 0, 
+            rotation: 180, 
+            ease: "elastic.out(1, 0.5)" 
+        }, "-=1");
 
+    // Navbar animation
+    gsap.from('.navbar', {
+        duration: 1,
+        y: -100,
+        opacity: 0,
+        ease: "power3.out",
+        delay: 0.5
+    });
+
+    // Section animations with ScrollTrigger
+    gsap.utils.toArray('section').forEach((section, i) => {
+        if (section.id === 'home') return;
+
+        ScrollTrigger.create({
+            trigger: section,
+            start: "top 80%",
+            end: "bottom 20%",
+            onEnter: () => animateSection(section),
+        });
+    });
+
+    // Stats counter animation
+    ScrollTrigger.create({
+        trigger: '.stats-grid',
+        start: "top 80%",
+        onEnter: () => animateCounters()
+    });
+
+    // Cards animations
+    gsap.utils.toArray('.cert-card, .project-card, .stat-card').forEach(card => {
+        gsap.set(card, { y: 50, opacity: 0 });
+        
+        ScrollTrigger.create({
+            trigger: card,
+            start: "top 90%",
+            onEnter: () => {
+                gsap.to(card, {
+                    duration: 0.8,
+                    y: 0,
+                    opacity: 1,
+                    ease: "power3.out"
+                });
+            }
+        });
+    });
+
+    // Parallax effect for sections
+    gsap.utils.toArray('.about, .certifications, .projects, .contact').forEach(section => {
+        gsap.to(section, {
+            backgroundPosition: "50% 100%",
+            ease: "none",
+            scrollTrigger: {
+                trigger: section,
+                start: "top bottom",
+                end: "bottom top",
+                scrub: true
+            }
+        });
+    });
+}
+
+function animateSection(section) {
+    const title = section.querySelector('.section-title');
+    const content = section.querySelectorAll('.about-content, .cert-categories, .projects-grid, .contact-content');
+
+    if (title) {
+        gsap.from(title, {
+            duration: 1,
+            y: 50,
+            opacity: 0,
+            ease: "power3.out"
+        });
+    }
+
+    if (content.length > 0) {
+        gsap.from(content, {
+            duration: 1.2,
+            y: 30,
+            opacity: 0,
+            stagger: 0.2,
+            ease: "power3.out",
+            delay: 0.2
+        });
+    }
+}
+
+function animateCounters() {
+    const counters = document.querySelectorAll('.stat-number');
+    
+    counters.forEach(counter => {
+        const target = parseInt(counter.textContent);
+        const isPlus = counter.textContent.includes('+');
+        
+        gsap.to(counter, {
+            duration: 2,
+            textContent: target,
+            roundProps: "textContent",
+            ease: "power2.out",
+            onUpdate: function() {
+                counter.textContent = Math.round(this.targets()[0].textContent) + (isPlus ? '+' : '');
+            }
+        });
+    });
+}
+
+// Navigation
+function initNavigation() {
+    const hamburger = document.querySelector('.hamburger');
+    const navMenu = document.querySelector('.nav-menu');
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    // Hamburger menu toggle
+    if (hamburger) {
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            navMenu.classList.toggle('active');
+        });
+    }
+
+    // Close menu when clicking on a link
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            hamburger.classList.remove('active');
+            navMenu.classList.remove('active');
+        });
+    });
+
+    // Active navigation link
+    window.addEventListener('scroll', () => {
+        let current = '';
+        const sections = document.querySelectorAll('section');
+        
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            
+            if (scrollY >= sectionTop - 200) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href').includes(current)) {
+                link.classList.add('active');
+            }
+        });
+    });
+
+    // Navbar background on scroll
+    window.addEventListener('scroll', () => {
+        const navbar = document.querySelector('.navbar');
+        if (window.scrollY > 100) {
+            navbar.style.background = 'rgba(10, 10, 10, 0.95)';
+        } else {
+            navbar.style.background = 'rgba(10, 10, 10, 0.9)';
+        }
+    });
+}
+
+// Smooth scrolling
+function initSmoothScrolling() {
+    const links = document.querySelectorAll('a[href^="#"]');
+    
+    links.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            const targetId = link.getAttribute('href').substring(1);
+            const targetElement = document.getElementById(targetId);
+            
+            if (targetElement) {
+                gsap.to(window, {
+                    duration: 1.5,
+                    scrollTo: {
+                        y: targetElement,
+                        offsetY: 80
+                    },
+                    ease: "power3.inOut"
+                });
+            }
+        });
+    });
+}
+
+// Parallax effects
+function initParallax() {
+    window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        const rate = scrolled * -0.5;
+        
+        const heroBackground = document.querySelector('.hero-bg');
+        if (heroBackground) {
+            heroBackground.style.transform = `translateY(${rate}px)`;
+        }
+    });
+}
+
+// Contact form
+function initContactForm() {
+    const form = document.querySelector('.contact-form form');
+    
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Animate button
+            const button = form.querySelector('.btn-primary');
+            const originalText = button.textContent;
+            
+            button.textContent = 'Sending...';
+            button.style.transform = 'scale(0.95)';
+            
+            // Simulate sending (replace with actual form submission)
+            setTimeout(() => {
+                button.textContent = 'Message Sent!';
+                button.style.background = 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    button.style.transform = 'scale(1)';
+                    form.reset();
+                }, 2000);
+            }, 1500);
+        });
+    }
+}
+
+// Add hover effects to cards
+document.addEventListener('DOMContentLoaded', () => {
+    // Project cards hover effect
+    const projectCards = document.querySelectorAll('.project-card');
+    projectCards.forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            gsap.to(card, {
+                duration: 0.3,
+                y: -10,
+                scale: 1.02,
+                boxShadow: "0 20px 60px rgba(102, 126, 234, 0.3)",
+                ease: "power2.out"
+            });
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            gsap.to(card, {
+                duration: 0.3,
+                y: 0,
+                scale: 1,
+                boxShadow: "0 10px 30px rgba(102, 126, 234, 0.1)",
+                ease: "power2.out"
+            });
+        });
+    });
+
+    // Skill category hover effects
+    const skillCategories = document.querySelectorAll('.skill-category');
+    skillCategories.forEach(category => {
+        category.addEventListener('mouseenter', () => {
+            gsap.to(category, {
+                duration: 0.3,
+                scale: 1.05,
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                ease: "power2.out"
+            });
+        });
+        
+        category.addEventListener('mouseleave', () => {
+            gsap.to(category, {
+                duration: 0.3,
+                scale: 1,
+                backgroundColor: "rgba(255, 255, 255, 0.05)",
+                ease: "power2.out"
+            });
+        });
+    });
+});
+
+// Loading animation
+window.addEventListener('load', () => {
+    const body = document.body;
+    body.style.overflow = 'hidden';
+    
+    setTimeout(() => {
+        body.style.overflow = 'auto';
+        
+        // Trigger initial animations
+        gsap.from('body', {
+            duration: 0.8,
+            opacity: 0,
+            ease: "power2.out"
+        });
+    }, 500);
+});
+
+// Add some interactive elements
+document.addEventListener('DOMContentLoaded', () => {
+    // Add tilt effect to hero image
+    const heroImage = document.querySelector('.profile-image');
+    if (heroImage) {
+        heroImage.addEventListener('mousemove', (e) => {
+            const rect = heroImage.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+            
+            const tiltX = (y / rect.height) * 10;
+            const tiltY = (x / rect.width) * -10;
+            
+            gsap.to(heroImage, {
+                duration: 0.3,
+                rotationX: tiltX,
+                rotationY: tiltY,
+                transformPerspective: 1000,
+                ease: "power2.out"
+            });
+        });
+        
+        heroImage.addEventListener('mouseleave', () => {
+            gsap.to(heroImage, {
+                duration: 0.5,
+                rotationX: 0,
+                rotationY: 0,
+                ease: "power2.out"
+            });
+        });
+    }
+    
+    // Add floating animation to social links
+    const socialLinks = document.querySelectorAll('.social-link');
+    socialLinks.forEach((link, index) => {
+        gsap.to(link, {
+            duration: 2 + index * 0.1,
+            y: -5,
+            repeat: -1,
+            yoyo: true,
+            ease: "power2.inOut",
+            delay: index * 0.2
+        });
+    });
+});
+
+// Easter egg: Konami code
+let konamiCode = [];
+const konamiSequence = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+
+document.addEventListener('keydown', (e) => {
+    konamiCode.push(e.keyCode);
+    if (konamiCode.length > konamiSequence.length) {
+        konamiCode.shift();
+    }
+    
+    if (JSON.stringify(konamiCode) === JSON.stringify(konamiSequence)) {
+        // Trigger special animation
+        const allCards = document.querySelectorAll('.project-card, .cert-card');
+        allCards.forEach((card, index) => {
+            gsap.to(card, {
+                duration: 0.5,
+                rotation: 360,
+                scale: 1.1,
+                delay: index * 0.1,
+                ease: "power2.out",
+                onComplete: () => {
+                    gsap.to(card, {
+                        duration: 0.3,
+                        rotation: 0,
+                        scale: 1,
+                        ease: "power2.out"
+                    });
+                }
+            });
+        });
+        
+        konamiCode = [];
+    }
 });

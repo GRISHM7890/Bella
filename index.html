@@ -3,62 +3,362 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bella - Your AI Companion</title>
+    <title>Grishma Mahorkar - AI Engineer & Developer</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="chatStyles.css">
-    <!-- 引入 Font Awesome 图标库，用于麦克风图标 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 </head>
 <body>
-
-    <!-- 加载屏幕 -->
-    <div id="loading-screen">
-        <img src="Bellaicon/Generated image.webp" alt="Loading Bella...">
-    </div>
-
-    <!-- 视频背景 -->
-    <div class="video-container">
-        <video autoplay muted class="bg-video active" id="video1">
-            <source src="视频资源/3D 建模图片制作.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-        <video muted class="bg-video" id="video2">
-            <source src="" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-    </div>
-
-    <!-- 内容层，覆盖在视频之上 -->
-    <div class="content-overlay">
-
-        <!-- 语音识别结果显示区域 -->
-        <div class="transcript-container">
-            <p id="transcript"></p>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-text">GM</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link">Home</a></li>
+                <li><a href="#about" class="nav-link">About</a></li>
+                <li><a href="#certifications" class="nav-link">Certifications</a></li>
+                <li><a href="#projects" class="nav-link">Projects</a></li>
+                <li><a href="#contact" class="nav-link">Contact</a></li>
+            </ul>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
         </div>
+    </nav>
 
-        <!-- 底部麦克风和链接 -->
-        <footer class="bottom-bar">
-            <button class="mic-button" id="mic-button" aria-label="Start Listening">
-                <i class="fas fa-microphone"></i>
-            </button>
-        </footer>
-
-        <!-- 聊天控制面板 -->
-        <div class="chat-control-panel">
-            <button id="chat-toggle-btn" class="control-btn primary">
-                <i class="fas fa-comments"></i>
-                <span>聊天</span>
-            </button>
-            <button id="chat-test-btn" class="control-btn secondary">
-                <i class="fas fa-paper-plane"></i>
-                <span>测试</span>
-            </button>
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1 class="hero-title">
+                        <span class="gradient-text">Grishma Mahorkar</span>
+                    </h1>
+                    <h2 class="hero-subtitle">AI Engineer & Machine Learning Specialist</h2>
+                    <p class="hero-description">
+                        18-year-old AI innovator from Gadchiroli, Maharashtra, India. 
+                        Founder of Pulxo Institute of AI, mastering the future of technology.
+                    </p>
+                    <div class="hero-buttons">
+                        <a href="#projects" class="btn btn-primary">View Projects</a>
+                        <a href="#contact" class="btn btn-secondary">Get In Touch</a>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <div class="image-container">
+                        <img src="grishma-profile.jpg" alt="Grishma Mahorkar" class="profile-image">
+                        <div class="image-overlay"></div>
+                    </div>
+                </div>
+            </div>
         </div>
+        <div class="hero-bg">
+            <canvas id="hero-canvas"></canvas>
+        </div>
+        <div class="scroll-indicator">
+            <div class="scroll-arrow"></div>
+        </div>
+    </section>
 
-    </div>
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2 class="section-title">About Me</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p class="about-intro">
+                        At just 18 years old, I'm passionate about pushing the boundaries of AI and machine learning. 
+                        Based in Gadchiroli, Maharashtra, I've dedicated myself to mastering cutting-edge technologies 
+                        and sharing knowledge through teaching and mentorship.
+                    </p>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number">50+</div>
+                            <div class="stat-label">Certifications</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">200+</div>
+                            <div class="stat-label">AI Tools Built</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">1</div>
+                            <div class="stat-label">AI Institute Founded</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">4</div>
+                            <div class="stat-label">Years Meditation</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="skills-section">
+                    <h3>Core Expertise</h3>
+                    <div class="skills-grid">
+                        <div class="skill-category">
+                            <h4><i class="fas fa-brain"></i> AI & Machine Learning</h4>
+                            <ul>
+                                <li>Deep Learning & Neural Networks</li>
+                                <li>Natural Language Processing</li>
+                                <li>Computer Vision</li>
+                                <li>Generative AI & LLMs</li>
+                            </ul>
+                        </div>
+                        <div class="skill-category">
+                            <h4><i class="fas fa-code"></i> Development</h4>
+                            <ul>
+                                <li>Python, JavaScript</li>
+                                <li>Flask, Streamlit</li>
+                                <li>Docker, AWS, GCP</li>
+                                <li>Git, CI/CD</li>
+                            </ul>
+                        </div>
+                        <div class="skill-category">
+                            <h4><i class="fas fa-shield-alt"></i> Security</h4>
+                            <ul>
+                                <li>Ethical Hacking</li>
+                                <li>Bug Bounty Research</li>
+                                <li>Cybersecurity</li>
+                                <li>Reverse Engineering</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    <script type="module" src="core.js"></script>
-    <script type="module" src="chatInterface.js"></script>
-    <script type="module" src="script.js"></script>
+    <!-- Certifications Section -->
+    <section id="certifications" class="certifications">
+        <div class="container">
+            <h2 class="section-title">Certifications & Achievements</h2>
+            <div class="cert-categories">
+                <div class="cert-category">
+                    <h3><i class="fas fa-robot"></i> AI & Machine Learning</h3>
+                    <div class="cert-grid">
+                        <div class="cert-card">
+                            <h4>IBM AI Developer Professional Certificate</h4>
+                            <p>Coursera (IBM)</p>
+                        </div>
+                        <div class="cert-card">
+                            <h4>Deep Learning Specialization</h4>
+                            <p>DeepLearning.AI</p>
+                        </div>
+                        <div class="cert-card">
+                            <h4>Generative AI Fundamentals</h4>
+                            <p>Google</p>
+                        </div>
+                        <div class="cert-card">
+                            <h4>Advanced Generative AI</h4>
+                            <p>IBM</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cert-category">
+                    <h3><i class="fas fa-lightbulb"></i> Prompt Engineering</h3>
+                    <div class="cert-grid">
+                        <div class="cert-card">
+                            <h4>Prompt Engineering Specialization</h4>
+                            <p>DeepLearning.AI</p>
+                        </div>
+                        <div class="cert-card">
+                            <h4>Advanced Prompt Design with ChatGPT</h4>
+                            <p>Coursera</p>
+                        </div>
+                        <div class="cert-card">
+                            <h4>AI Toolchain for Productivity</h4>
+                            <p>SVJC AI Workshop</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cert-category">
+                    <h3><i class="fas fa-cloud"></i> Cloud & DevOps</h3>
+                    <div class="cert-grid">
+                        <div class="cert-card">
+                            <h4>AWS Cloud Practitioner Essentials</h4>
+                            <p>Amazon AWS</p>
+                        </div>
+                        <div class="cert-card">
+                            <h4>Google Cloud Fundamentals</h4>
+                            <p>Google Cloud</p>
+                        </div>
+                        <div class="cert-card">
+                            <h4>Docker Essentials</h4>
+                            <p>Docker Inc.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cert-category">
+                    <h3><i class="fas fa-chart-line"></i> Business Simulations</h3>
+                    <div class="cert-grid">
+                        <div class="cert-card">
+                            <h4>Investment Banking Simulation</h4>
+                            <p>JPMorgan Chase</p>
+                        </div>
+                        <div class="cert-card">
+                            <h4>Data Analytics Job Simulation</h4>
+                            <p>Accenture</p>
+                        </div>
+                        <div class="cert-card">
+                            <h4>Goldman Sachs Excel Simulation</h4>
+                            <p>Forage</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects" class="projects">
+        <div class="container">
+            <h2 class="section-title">Featured Projects</h2>
+            <div class="projects-grid">
+                <div class="project-card">
+                    <div class="project-image">
+                        <i class="fas fa-brain project-icon"></i>
+                    </div>
+                    <h3>Smart Notes Maker App</h3>
+                    <p>All-in-one notes generator with 200+ AI-powered features for students including text extraction, flashcards, and quiz engine.</p>
+                    <div class="project-tech">
+                        <span>Python</span>
+                        <span>AI/ML</span>
+                        <span>NLP</span>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image">
+                        <i class="fas fa-graduation-cap project-icon"></i>
+                    </div>
+                    <h3>Pulxo Institute of AI</h3>
+                    <p>Founded and designed full-stack LMS system for AI education with student onboarding, lessons, and certification tracking.</p>
+                    <div class="project-tech">
+                        <span>Education</span>
+                        <span>LMS</span>
+                        <span>Full-Stack</span>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image">
+                        <i class="fas fa-balance-scale project-icon"></i>
+                    </div>
+                    <h3>Bias Mitigation with MinDiff</h3>
+                    <p>Implemented Google's MinDiff to reduce demographic bias in machine learning models, improving fairness in AI systems.</p>
+                    <div class="project-tech">
+                        <span>Ethical AI</span>
+                        <span>MinDiff</span>
+                        <span>Fairness</span>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image">
+                        <i class="fas fa-robot project-icon"></i>
+                    </div>
+                    <h3>Generative AI Chatbot</h3>
+                    <p>Intelligent chatbot with contextual understanding using GPT models and advanced prompt engineering techniques.</p>
+                    <div class="project-tech">
+                        <span>Flask</span>
+                        <span>OpenAI API</span>
+                        <span>GPT</span>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image">
+                        <i class="fas fa-file-alt project-icon"></i>
+                    </div>
+                    <h3>AI Resume Builder</h3>
+                    <p>Dynamic resume generator with AI-assisted text suggestions and intelligent layout optimization using Streamlit.</p>
+                    <div class="project-tech">
+                        <span>Streamlit</span>
+                        <span>OpenAI</span>
+                        <span>Python</span>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image">
+                        <i class="fas fa-search project-icon"></i>
+                    </div>
+                    <h3>Explainable AI Dashboard</h3>
+                    <p>Built transparency dashboard using SHAP values to explain black-box model decisions and improve AI interpretability.</p>
+                    <div class="project-tech">
+                        <span>SHAP</span>
+                        <span>LIME</span>
+                        <span>XAI</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2 class="section-title">Let's Connect</h2>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <h3>Get In Touch</h3>
+                    <p>Interested in AI collaboration, mentorship, or discussing the future of technology? Let's connect!</p>
+                    <div class="contact-details">
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Gadchiroli, Maharashtra, India</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>contact@grishmamahorkar.com</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-building"></i>
+                            <span>Founder, Pulxo Institute of AI</span>
+                        </div>
+                    </div>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fas fa-globe"></i></a>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <form>
+                        <div class="form-group">
+                            <input type="text" placeholder="Your Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" placeholder="Your Email" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" placeholder="Subject" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea placeholder="Your Message" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Grishma Mahorkar. All rights reserved. | Crafted with passion for AI innovation.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>
