@@ -1,6 +1,7 @@
 // 导入BellaAI核心模块
 import { BellaAI } from './core.js';
 import { ChatInterface } from './chatInterface.js';
+import { AdvancedFeatures } from './advancedFeatures.js';
 
 document.addEventListener('DOMContentLoaded', async function() {
     // --- Get all necessary DOM elements first ---
@@ -14,25 +15,29 @@ document.addEventListener('DOMContentLoaded', async function() {
     // --- AI Core Initialization ---
     let bellaAI;
     let chatInterface;
+    let advancedFeatures;
     
-    // 首先初始化聊天界面（不依赖AI）
+    // 首先初始化聊天界面和高级功能（不依赖AI）
     try {
         chatInterface = new ChatInterface();
+        advancedFeatures = new AdvancedFeatures();
+        
         console.log('聊天界面初始化成功');
-        console.log('ChatInterface实例创建完成:', chatInterface);
-        console.log('聊天容器元素:', chatInterface.chatContainer);
-        console.log('聊天容器是否在DOM中:', document.body.contains(chatInterface.chatContainer));
+        console.log('高级功能初始化成功');
+        
+        // 监听贝拉显示聊天的自定义事件
+        window.addEventListener('bella-show-chat', () => {
+            chatInterface.show();
+        });
         
         // 自动显示聊天界面（调试用）
         setTimeout(() => {
             console.log('尝试自动显示聊天界面...');
             chatInterface.show();
             console.log('聊天界面已自动显示');
-            console.log('聊天界面可见性:', chatInterface.getVisibility());
-            console.log('聊天容器类名:', chatInterface.chatContainer.className);
         }, 2000);
     } catch (error) {
-        console.error('聊天界面初始化失败:', error);
+        console.error('界面初始化失败:', error);
     }
     
     // 然后尝试初始化AI核心
@@ -43,19 +48,85 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.log('Bella AI 初始化成功');
         
         // 设置聊天界面的AI回调函数
-        if (chatInterface) {
+        if (chatInterface && advancedFeatures) {
             chatInterface.onMessageSend = async (message) => {
                 try {
+                    // 更新最后交互时间
+                    advancedFeatures.updateLastInteraction();
+                    
                     chatInterface.showTypingIndicator();
                     const response = await bellaAI.think(message);
                     chatInterface.hideTypingIndicator();
+                    
+                    // 获取云端API服务以获取情感状态
+                    const cloudAPI = bellaAI.getCloudAPIService();
+                    const relationshipInfo = cloudAPI.getRelationshipInfo();
+                    
+                    // 更新UI显示
+                    chatInterface.updateRelationshipLevel(relationshipInfo.level);
+                    chatInterface.updateEmotionalState(relationshipInfo.emotionalState);
+                    
+                    // 添加消息到界面
                     chatInterface.addMessage('assistant', response);
+                    
+                    // 语音播报（如果启用）
+                    if (advancedFeatures.isVoiceEnabled) {
+                        await advancedFeatures.emotionalSpeak(response, relationshipInfo.emotionalState);
+                    }
+                    
                 } catch (error) {
                     console.error('AI处理错误:', error);
                     chatInterface.hideTypingIndicator();
                     chatInterface.addMessage('assistant', '抱歉，我现在有点困惑，请稍后再试...');
                 }
             };
+
+            // 设置其他回调函数
+            chatInterface.onProviderChange = (provider) => {
+                bellaAI.switchProvider(provider);
+                console.log(`切换到 ${provider} 提供商`);
+            };
+
+            chatInterface.onAPIKeySave = (provider, apiKey) => {
+                bellaAI.setAPIKey(provider, apiKey);
+                console.log(`${provider} API密钥已保存`);
+            };
+
+            chatInterface.onClearHistory = () => {
+                bellaAI.clearHistory();
+                console.log('对话历史已清除');
+            };
+
+            chatInterface.onUserNameSave = (username) => {
+                const cloudAPI = bellaAI.getCloudAPIService();
+                cloudAPI.setUserName(username);
+                console.log(`用户名设置为: ${username}`);
+            };
+
+            chatInterface.onThemeChange = (theme) => {
+                const cloudAPI = bellaAI.getCloudAPIService();
+                cloudAPI.setEmotionalTheme(theme);
+                console.log(`情感主题切换为: ${theme}`);
+            };
+
+            chatInterface.onVoiceToggle = (enabled) => {
+                advancedFeatures.toggleVoice(enabled);
+                console.log(`语音播报: ${enabled ? '启用' : '禁用'}`);
+            };
+
+            chatInterface.onProactiveToggle = (enabled) => {
+                advancedFeatures.toggleProactiveMode(enabled);
+                console.log(`主动模式: ${enabled ? '启用' : '禁用'}`);
+            };
+
+            // 设置主动消息定时器
+            setInterval(() => {
+                if (Math.random() < 0.1) { // 10%的概率
+                    const cloudAPI = bellaAI.getCloudAPIService();
+                    const proactiveMessage = cloudAPI.generateProactiveMessage();
+                    chatInterface.showProactiveMessage(proactiveMessage);
+                }
+            }, 60000); // 每分钟检查一次
         }
         
         micButton.disabled = false;

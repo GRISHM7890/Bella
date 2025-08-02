@@ -39,6 +39,10 @@ class ChatInterface {
                     <div class="bella-title-text">
                         <h3>贝拉</h3>
                         <span class="bella-status">在线</span>
+                        <div class="bella-relationship-info">
+                            <span class="bella-heart-level">❤️ <span class="bella-level-text">关系等级 1</span></span>
+                            <span class="bella-emotion-indicator">😊</span>
+                        </div>
                     </div>
                 </div>
                 <div class="bella-chat-controls">
@@ -104,7 +108,10 @@ class ChatInterface {
                     <label>AI服务提供商</label>
                     <select class="bella-provider-select">
                         <option value="local">本地模型</option>
-                        <option value="openai">OpenAI GPT</option>
+                        <option value="claude" selected>Claude (推荐)</option>
+                        <option value="openai">OpenAI GPT-4</option>
+                        <option value="gemini">Google Gemini</option>
+                        <option value="groq">Groq (超快)</option>
                         <option value="qwen">通义千问</option>
                         <option value="ernie">文心一言</option>
                         <option value="glm">智谱AI</option>
@@ -122,6 +129,35 @@ class ChatInterface {
                         <option value="assistant">智能助手</option>
                         <option value="creative">创意伙伴</option>
                     </select>
+                </div>
+                <div class="bella-setting-group">
+                    <label>用户名称</label>
+                    <input type="text" class="bella-username-input" placeholder="告诉贝拉你的名字">
+                    <button class="bella-username-save">保存</button>
+                </div>
+                <div class="bella-setting-group">
+                    <label>情感主题</label>
+                    <select class="bella-theme-select">
+                        <option value="default">温暖友好</option>
+                        <option value="romantic">浪漫甜蜜</option>
+                        <option value="caring">关怀体贴</option>
+                        <option value="playful">俏皮可爱</option>
+                        <option value="supportive">理解支持</option>
+                    </select>
+                </div>
+                <div class="bella-setting-group">
+                    <label>语音播报</label>
+                    <div class="bella-toggle-switch">
+                        <input type="checkbox" id="bella-voice-toggle" class="bella-voice-toggle">
+                        <label for="bella-voice-toggle" class="bella-toggle-label">启用语音</label>
+                    </div>
+                </div>
+                <div class="bella-setting-group">
+                    <label>主动通知</label>
+                    <div class="bella-toggle-switch">
+                        <input type="checkbox" id="bella-proactive-toggle" class="bella-proactive-toggle">
+                        <label for="bella-proactive-toggle" class="bella-toggle-label">启用主动关怀</label>
+                    </div>
                 </div>
                 <div class="bella-setting-group">
                     <button class="bella-clear-history">清除聊天记录</button>
@@ -203,6 +239,42 @@ class ChatInterface {
                 this.onAPIKeySave?.(provider, apiKey.trim());
                 this.showNotification('API密钥已保存', 'success');
             }
+        });
+
+        // 用户名保存
+        this.settingsPanel.querySelector('.bella-username-save').addEventListener('click', () => {
+            const username = this.settingsPanel.querySelector('.bella-username-input').value.trim();
+            if (username) {
+                this.onUserNameSave?.(username);
+                this.showNotification(`很高兴认识你，${username}！`, 'success');
+            }
+        });
+
+        // 情感主题切换
+        this.settingsPanel.querySelector('.bella-theme-select').addEventListener('change', (e) => {
+            const theme = e.target.value;
+            this.onThemeChange?.(theme);
+            this.showNotification('情感主题已更新', 'success');
+            
+            // 应用主题类名到聊天容器
+            this.chatContainer.className = this.chatContainer.className.replace(/\b\w+-theme\b/g, '');
+            if (theme !== 'default') {
+                this.chatContainer.classList.add(`${theme}-theme`);
+            }
+        });
+
+        // 语音播报切换
+        this.settingsPanel.querySelector('.bella-voice-toggle').addEventListener('change', (e) => {
+            const enabled = e.target.checked;
+            this.onVoiceToggle?.(enabled);
+            this.showNotification(enabled ? '语音播报已启用 🔊' : '语音播报已关闭 🔇', 'success');
+        });
+
+        // 主动通知切换
+        this.settingsPanel.querySelector('.bella-proactive-toggle').addEventListener('change', (e) => {
+            const enabled = e.target.checked;
+            this.onProactiveToggle?.(enabled);
+            this.showNotification(enabled ? '主动关怀已启用 💕' : '主动关怀已关闭', 'success');
         });
 
         // 清除聊天记录
@@ -430,11 +502,68 @@ class ChatInterface {
         return this.isVisible;
     }
 
+    // 更新关系等级显示
+    updateRelationshipLevel(level) {
+        const levelText = this.chatContainer.querySelector('.bella-level-text');
+        if (levelText) {
+            levelText.textContent = `关系等级 ${level}`;
+        }
+        
+        // 根据关系等级更新心形图标
+        const heartLevel = this.chatContainer.querySelector('.bella-heart-level');
+        if (heartLevel) {
+            const hearts = ['💔', '💝', '💖', '💕', '💓', '💗', '💘', '💞', '💟', '❤️‍🔥'];
+            const heartIcon = hearts[Math.min(level - 1, hearts.length - 1)];
+            heartLevel.innerHTML = `${heartIcon} <span class="bella-level-text">关系等级 ${level}</span>`;
+        }
+    }
+
+    // 更新情感状态显示
+    updateEmotionalState(state) {
+        const emotionIndicator = this.chatContainer.querySelector('.bella-emotion-indicator');
+        if (emotionIndicator) {
+            const emotions = {
+                'happy': '😊',
+                'excited': '😍',
+                'thoughtful': '🤔',
+                'caring': '🥰',
+                'playful': '😄'
+            };
+            emotionIndicator.textContent = emotions[state] || '😊';
+        }
+    }
+
+    // 添加带情感的消息
+    addMessageWithEmotion(role, content, emotion = null) {
+        this.addMessage(role, content);
+        
+        // 如果是助手消息且有情感，更新情感显示
+        if (role === 'assistant' && emotion) {
+            this.updateEmotionalState(emotion);
+        }
+    }
+
+    // 显示主动消息
+    showProactiveMessage(message) {
+        setTimeout(() => {
+            this.addMessage('assistant', message);
+            this.updateEmotionalState('caring');
+            // 如果聊天窗口未显示，可以显示通知
+            if (!this.isVisible) {
+                this.showNotification('贝拉想和你聊天 💕', 'info');
+            }
+        }, Math.random() * 3000 + 2000); // 随机延迟2-5秒
+    }
+
     // 设置回调函数
     onMessageSend = null;
     onProviderChange = null;
     onAPIKeySave = null;
     onClearHistory = null;
+    onUserNameSave = null;
+    onThemeChange = null;
+    onVoiceToggle = null;
+    onProactiveToggle = null;
 }
 
 // ES6模块导出
